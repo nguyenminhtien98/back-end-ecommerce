@@ -1,0 +1,34 @@
+# 1. Bỏ qua thư mục node_modules (thư viện cài bằng npm/yarn)
+node_modules/
+
+# 2. Bỏ qua các file môi trường chứa thông tin nhạy cảm
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# 3. Bỏ qua file lock (tùy chọn)
+package-lock.json
+yarn.lock
+
+# 4. Bỏ qua thư mục build (nếu có)
+dist/
+build/
+
+# 5. Bỏ qua các file log và debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# 6. Bỏ qua thư mục database (nếu có)
+*.sqlite
+*.db
+dump.sql
+
+# 7. Bỏ qua file chứa thông tin cá nhân hoặc SSH keys (nếu có)
+*.pem
+*.crt
+*.key
