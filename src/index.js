@@ -28,7 +28,7 @@ setupSocket(io);
 app.set('io', io);
 
 const corsOptions = {
-    origin: 'https://shop-football-reactjs.vercel.app/',
+    origin: 'https://shop-football-reactjs.vercel.app',
     credentials: true,
 };
 
