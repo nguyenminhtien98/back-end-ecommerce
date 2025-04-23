@@ -1,9 +1,5 @@
 const ChatService = require('../services/ChatService')
 
-/**
- * Tạo hoặc lấy cuộc trò chuyện theo userId (nếu đã đăng nhập)
- * hoặc guestId (nếu chưa đăng nhập - frontend gửi tạm mã định danh local)
- */
 const createOrGetChat = async (req, res) => {
     try {
         const { userId, guestId } = req.body
@@ -48,12 +44,12 @@ const getMessages = async (req, res) => {
  */
 const getAllChats = async (req, res) => {
     try {
-      const response = await ChatService.getAllChats();
-      return res.status(200).json(response);  // Trả về danh sách cuộc trò chuyện với các tin nhắn
+        const response = await ChatService.getAllChats();
+        return res.status(200).json(response);
     } catch (err) {
-      return res.status(500).json({ status: 'ERR', message: err.message });
+        return res.status(500).json({ status: 'ERR', message: err.message });
     }
-  };
+};
 /**
  * Admin gửi tin nhắn phản hồi
  */
@@ -71,10 +67,32 @@ const adminSendMessage = async (req, res) => {
     }
 }
 
+const mergeGuestConversation = async (req, res) => {
+    try {
+        const { guestChatId, userId } = req.body;
+
+        if (!guestChatId || !userId) {
+            return res.status(400).json({ status: "ERR", message: "Missing guestChatId or userId" });
+        }
+
+        const mergedChat = await ChatService.mergeGuestChat(guestChatId, userId);
+
+        if (!mergedChat) {
+            return res.status(404).json({ status: "ERR", message: "Guest chat not found or merge failed" });
+        }
+
+        return res.status(200).json({ status: "OK", message: "Chat merged successfully", conversation: mergedChat });
+    } catch (error) {
+        console.error("Error merging guest conversation:", error);
+        return res.status(500).json({ status: "ERR", message: "Internal server error" });
+    }
+}
+
 module.exports = {
     createOrGetChat,
     sendMessage,
     getMessages,
     getAllChats,
     adminSendMessage,
+    mergeGuestConversation
 }

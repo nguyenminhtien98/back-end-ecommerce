@@ -5,6 +5,7 @@ const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Gửi tin nhắn (user hoặc guest gửi tin nhắn)
 router.post('/send-message', messageController.sendMessage);
+router.post('/admin-send-message', messageController.adminSendMessage);
 
 // Lấy tất cả tin nhắn trong một cuộc trò chuyện
 router.get('/get-messages/:chatId', messageController.getMessages);

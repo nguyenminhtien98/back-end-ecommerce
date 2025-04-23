@@ -1,17 +1,17 @@
 const MessageService = require('../services/MessageService');
 const { v4: uuidv4 } = require('uuid');
-const Chat = require('../models/initChatModel'); 
+const Chat = require('../models/ChatModel');
 
-/**
- * Gửi tin nhắn từ người dùng hoặc admin
- */
-// Gửi tin nhắn từ người dùng hoặc admin
 const sendMessage = async (req, res) => {
     try {
         const { chatId, sender, content, userId } = req.body;
 
-        // Gửi tin nhắn thông qua MessageService
-        const message = await MessageService.sendMessage(chatId, sender, content, userId);
+        const message = await MessageService.sendMessage({ chatId, sender, content, userId });
+        const io = req.app.get('io');
+        if (io) {
+            console.log("Đang phát sự kiện receive-message:", message);
+            io.to(chatId).emit('receive-message', message);
+        }
 
         return res.status(200).json({ message });
     } catch (error) {
@@ -20,9 +20,6 @@ const sendMessage = async (req, res) => {
     }
 };
 
-/**
- * Lấy tất cả tin nhắn trong một cuộc trò chuyện
- */
 const getMessages = async (req, res) => {
     try {
         const { chatId } = req.params;
@@ -31,12 +28,10 @@ const getMessages = async (req, res) => {
         }
 
         const messages = await MessageService.getMessagesByChatId(chatId);
-        
         if (!messages) {
             return res.status(404).json({ message: 'No messages found for this chat' });
         }
 
-        // Đảm bảo trả về mảng, ngay cả khi không có tin nhắn
         return res.status(200).json(messages || []);
     } catch (err) {
         console.error('Error fetching messages:', err);
@@ -44,9 +39,6 @@ const getMessages = async (req, res) => {
     }
 };
 
-/**
- * Xử lý trả lời tự động cho người dùng dựa trên câu hỏi
- */
 const autoReplyMessage = async (req, res) => {
     try {
         const { chatId, content } = req.body;
@@ -60,9 +52,6 @@ const autoReplyMessage = async (req, res) => {
     }
 };
 
-/**
- * Lấy danh sách các tin nhắn từ admin hoặc user (dùng cho admin để xem tin nhắn)
- */
 const getChatMessagesForAdmin = async (req, res) => {
     try {
         const { chatId } = req.params;
@@ -73,9 +62,7 @@ const getChatMessagesForAdmin = async (req, res) => {
     }
 };
 
-/**
- * Admin gửi tin nhắn phản hồi
- */
+
 const adminSendMessage = async (req, res) => {
     try {
         const { chatId, content } = req.body;
@@ -83,19 +70,30 @@ const adminSendMessage = async (req, res) => {
         if (!chatId || !content) {
             return res.status(400).json({ status: 'ERR', message: 'Missing chatId or content' });
         }
+
         const response = await MessageService.sendMessage({ chatId, sender, content });
+
+        const io = req.app.get('io');
+        if (io) {
+            console.log("Phát sự kiện receive-message:", response);
+            io.to(chatId).emit('receive-message', response);
+        }
+
         return res.status(200).json(response);
     } catch (err) {
         return res.status(500).json({ status: 'ERR', message: err.message });
     }
-};
-
-// INIT CHAT - guest hoặc user đều dùng
+}
 const initChat = async (req, res) => {
     try {
-      const newChat = new Chat();
+      // Lấy guestId từ body; nếu không có thì cảnh báo.
+      const { guestId } = req.body;  
+      if (!guestId) {
+        return res.status(400).json({ error: 'Missing guestId' });
+      }
+      // Tạo mới Chat với guestId được truyền vào. Schema của Chat sẽ tự động lưu userId là null.
+      const newChat = new Chat({ guestId: guestId });
       await newChat.save();
-  
       res.status(201).json({ chatId: newChat._id });
     } catch (error) {
       console.error('initChat error:', error);
